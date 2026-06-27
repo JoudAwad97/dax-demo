@@ -6,7 +6,6 @@
   "scripts": {
     "start": "ts-node --transpile-only src/server.ts",
     "seed": "ts-node --transpile-only src/seed.ts",
-    "verify": "ts-node --transpile-only src/verify.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },

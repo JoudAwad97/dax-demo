@@ -9,12 +9,8 @@ Every request prints a narrated line to the console — operation, where it was
 served (DAX cache vs DynamoDB, inferred from latency), and how long it took.
 
 ```
-▶ GET /products/PROD#42
-  ↳ GetItem via DAX — likely MISS → DynamoDB (8.21ms)
-  ↳ PROD#42 = $49
-▶ GET /products/PROD#42
-  ↳ GetItem via DAX — cache HIT (0.42ms)
-  ↳ PROD#42 = $49
+GET /products/PROD#42 — likely MISS → DynamoDB (8.2ms) = $49
+GET /products/PROD#42 — cache HIT (0.4ms) = $49
 ```
 
 > **Why there's no `docker compose up`:** DAX has **no local emulator**. The
@@ -158,12 +154,19 @@ times a direct DynamoDB read alongside so you can see the gap for real.
 
 ## Layout
 
+Three small files in `app/src` (plus config and the CDK in `infra/`):
+
 ```
 dax-demo/
-  app/            # the REST API (Express + amazon-dax-client, TypeScript)
-    src/server.ts # routes (the 4 behaviors) + narrated logging
-    src/dax.ts    # DAX + direct DynamoDB clients
-    src/seed.ts   # seed the 3 products
-  infra/          # CDK: VPC + DAX cluster + DynamoDB + EC2 runner
-    lib/dax-demo-stack.ts
+  app/src/
+    config.ts   # env config: table, GSI, DAX endpoint, port, hit threshold
+    dax.ts      # the two clients — dax() (through the cache) and ddb (direct)
+    server.ts   # small DAX/DynamoDB helpers, then the 4 routes; logs to console
+    seed.ts     # writes the 3 demo products
+  infra/
+    lib/dax-demo-stack.ts   # CDK: VPC + DAX cluster + DynamoDB + EC2 runner
 ```
+
+`server.ts` reads top to bottom: a few named helpers (`getProduct`,
+`queryCategory`, `setPrice` — each takes `dax()` or `ddb`, so every route shows
+whether it goes through the cache), then one route per behavior.

@@ -1,6 +1,5 @@
 import { ddb } from "./dax";
 import { TABLE_NAME } from "./config";
-import * as log from "./log";
 
 // The product-catalog anchor from the video. PROD#42 starts at $49 so the
 // write-through demo can drop it to $39.
@@ -11,15 +10,15 @@ const ITEMS = [
 ];
 
 async function main(): Promise<void> {
-  log.banner([`Seeding ${TABLE_NAME} (direct to DynamoDB, bypassing DAX)…`]);
+  console.log(`\nSeeding ${TABLE_NAME} (direct to DynamoDB, bypassing DAX)…\n`);
   for (const item of ITEMS) {
     await ddb.put({ TableName: TABLE_NAME, Item: item }).promise();
-    log.ok(`${item.id}  ${item.name.padEnd(20)} $${item.price}`);
+    console.log(`  ✓ ${item.id}  ${item.name.padEnd(20)} $${item.price}`);
   }
-  log.banner([`Done — ${ITEMS.length} items in ${TABLE_NAME}.`]);
+  console.log(`\nDone — ${ITEMS.length} items in ${TABLE_NAME}.\n`);
 }
 
 main().catch((err) => {
-  log.warn(err?.message ?? String(err));
+  console.error(err?.message ?? String(err));
   process.exit(1);
 });
