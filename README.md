@@ -89,13 +89,16 @@ cd dax-demo/infra && cdk destroy
 
 If you'd rather build it by hand on screen, here's the same stack click-by-click.
 
-1. **VPC** → create a VPC with 2 AZs, public + private subnets (the "VPC and
-   more" wizard is fine), 1 NAT gateway.
+1. **VPC** → create a VPC with 2 AZs and **public + private (isolated)** subnets.
+   **No NAT gateway** — instead add a **DynamoDB gateway endpoint** (VPC →
+   Endpoints → `com.amazonaws.<region>.dynamodb`, Gateway type) so DAX can reach
+   DynamoDB from the isolated subnets for free, and the runner reaches AWS over
+   the internet gateway.
 2. **DynamoDB** → create table `ProductCatalog`, partition key `id` (String),
    on-demand. Add a **GSI** `category-index` with partition key `category`
    (String).
-3. **DAX → Subnet groups** → create `dax-demo-subnets` over the VPC's **private**
-   subnets.
+3. **DAX → Subnet groups** → create `dax-demo-subnets` over the VPC's **isolated
+   (private)** subnets.
 4. **DAX → Parameter groups** → create `dax-demo-params`; set
    `record-ttl-millis = 60000` and `query-ttl-millis = 60000` (so staleness is
    visible — default is 300000).
@@ -104,10 +107,11 @@ If you'd rather build it by hand on screen, here's the same stack click-by-click
 6. **DAX → Clusters** → create cluster `dax-demo`, node type `dax.t3.small`,
    1 node, the IAM role above, the subnet group, the parameter group, a security
    group, **encryption: none**. Note the **cluster discovery endpoint**.
-7. **EC2** → launch a `t3.micro` (Amazon Linux 2023) **in the VPC**, attach an
-   instance role with **AmazonSSMManagedInstanceCore** + DynamoDB access +
-   `dax:*` on the cluster. Allow the EC2's security group **inbound 8111** on the
-   DAX security group.
+7. **EC2** → launch a `t3.micro` (Amazon Linux 2023) in a **public subnet** (with
+   a public IP, so it reaches AWS via the internet gateway — no NAT needed),
+   attach an instance role with **AmazonSSMManagedInstanceCore** + DynamoDB
+   access + `dax:*` on the cluster. Allow the EC2's security group **inbound
+   8111** on the DAX security group.
 8. On the box: install Node, copy this `app/` folder over, create `.env` (see
    `app/.env.example`) with the cluster endpoint, then `npm install`,
    `npm run seed`, `npm start`.
@@ -154,7 +158,7 @@ times a direct DynamoDB read alongside so you can see the gap for real.
 
 ## Layout
 
-Three small files in `app/src` (plus config and the CDK in `infra/`):
+Four small files in `app/src` (plus the CDK in `infra/`):
 
 ```
 dax-demo/
