@@ -1,0 +1,25 @@
+{
+  "name": "dax-rest-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tiny REST API demonstrating Amazon DynamoDB + DAX caching behavior (item cache, query cache, write-through, out-of-band staleness).",
+  "scripts": {
+    "start": "ts-node --transpile-only src/server.ts",
+    "seed": "ts-node --transpile-only src/seed.ts",
+    "verify": "ts-node --transpile-only src/verify.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "amazon-dax-client": "^1.2.9",
+    "aws-sdk": "^2.1600.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
